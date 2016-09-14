@@ -11,6 +11,7 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.ImageView;
 
 import com.activeandroid.ActiveAndroid;
 import com.activeandroid.Configuration;
@@ -28,6 +29,8 @@ import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 import java.util.ArrayList;
 import java.util.List;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -35,7 +38,7 @@ import retrofit2.Response;
 public class MainActivity extends AppCompatActivity {
 
     private SearchView searchView;
-    private RecyclerView mRecyclerView;
+    @BindView(R.id.rvProduct) RecyclerView mRecyclerView;
     private StaggeredGridLayoutManager mStaggeredLayoutManager;
     private ProgressDialog loading = null;
 
@@ -46,12 +49,14 @@ public class MainActivity extends AppCompatActivity {
     private String query;
     private int pageNow;
 
+    @BindView(R.id.toolbar) Toolbar toolbar;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        ButterKnife.bind(this);
         setSupportActionBar(toolbar);
 
         // Create global configuration and initialize ImageLoader with this config
@@ -65,8 +70,6 @@ public class MainActivity extends AppCompatActivity {
 
         mService = RestClient.getRestAdapter().create(Api.class);
         mCallback = callbackSearch();
-
-        mRecyclerView = (RecyclerView) findViewById(R.id.rvProduct);
         mStaggeredLayoutManager = new StaggeredGridLayoutManager(1, StaggeredGridLayoutManager.VERTICAL);
         mStaggeredLayoutManager.setSpanCount(2);
         mAdapter = new ProductAdapter();
