@@ -1,27 +1,36 @@
 package com.alifanurani.topedsimplesearch;
 
+import java.util.Arrays;
+
 /**
  * Created by USER on 9/13/2016.
  */
 public class SearchProductResultModel {
 
-    private long id;
+    private Status status;
+    private Data data[];
 
-    private String nama;
-
-    public long getId() {
-        return id;
+    public Status getStatus() {
+        return status;
     }
 
-    public void setId(long id) {
-        this.id = id;
+    public void setStatus(Status status) {
+        this.status = status;
+    }
+
+    public Data[] getData() {
+        return data;
+    }
+
+    public void setData(Data[] data) {
+        this.data = data;
     }
 
     @Override
     public String toString() {
         return "SearchProductResultModel{" +
-                "id=" + id +
-                ", nama='" + nama + '\'' +
+                "status=" + status +
+                ", data=" + Arrays.toString(data) +
                 '}';
     }
 }

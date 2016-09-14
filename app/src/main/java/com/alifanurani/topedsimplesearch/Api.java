@@ -10,6 +10,6 @@ import retrofit2.http.Query;
 public interface Api {
 
     @GET("search/v1/product")
-    Call<SearchProductResultModel[]> search(
+    Call<SearchProductResultModel> search(
             @Query("q") String q);
 }

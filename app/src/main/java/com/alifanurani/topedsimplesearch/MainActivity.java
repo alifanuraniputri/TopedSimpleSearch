@@ -7,14 +7,24 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.FragmentActivity;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
+import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import com.nostra13.universalimageloader.core.DisplayImageOptions;
+import com.nostra13.universalimageloader.core.ImageLoader;
+import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
+
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,9 +35,13 @@ import retrofit2.Response;
 public class MainActivity extends AppCompatActivity {
 
     private SearchView searchView;
-    private Call<SearchProductResultModel[]> mSearchCall;
-    private Callback<SearchProductResultModel[]> mCallback;
+    private RecyclerView mRecyclerView;
+    private StaggeredGridLayoutManager mStaggeredLayoutManager;
+
+    private Callback<SearchProductResultModel> mCallback;
     private Api mService;
+    private ProductAdapter mAdapter;
+    private ArrayList<Data> datas;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,21 +50,29 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        // Create global configuration and initialize ImageLoader with this config
+        DisplayImageOptions defaultOptions = new DisplayImageOptions.Builder()
+                .cacheOnDisk(true)
+                .build();
+        ImageLoaderConfiguration config = new ImageLoaderConfiguration.Builder(getApplicationContext())
+                .defaultDisplayImageOptions(defaultOptions)
+                .build();
+        com.nostra13.universalimageloader.core.ImageLoader.getInstance().init(config);
+
         mService = RestClient.getRestAdapter().create(Api.class);
 
         mCallback = callbackSearch();
 
-       /* mRecyclerView.addOnScrollListener(new EndlessRecyclerViewScrollListener(mStaggeredLayoutManager) {
-            @Override
-            public void onLoadMore(int page, int totalItems) {
-                String token = null;
-                if(SessionManager.isLogin(getContext())){
-                    token = SessionManager.getPreferences(getContext(), Constants.SHARED_PREFERENCES_KEY_TOKEN);
-                }
-                Call<ListAccountModel> mAccountCall = mAccountService.listAccount(token, "no-cache", page);
-                mAccountCall.enqueue(mListAccountCallback);
-            }
-        });*/
+
+        mRecyclerView = (RecyclerView) findViewById(R.id.rvProduct);
+        mStaggeredLayoutManager = new StaggeredGridLayoutManager(1, StaggeredGridLayoutManager.VERTICAL);
+        mStaggeredLayoutManager.setSpanCount(2);
+
+        mAdapter = new ProductAdapter();
+        mRecyclerView.setAdapter(mAdapter);
+        mRecyclerView.setLayoutManager(mStaggeredLayoutManager);
+
+
 
 
 
@@ -84,11 +106,21 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void searchProduct(String query) {
-        if (mSearchCall !=null ) {
-            mSearchCall.cancel();
-        }
-        mSearchCall = mService.search(query);
-        mSearchCall.enqueue(mCallback);
+
+
+        datas = new ArrayList<>();
+        mAdapter = new ProductAdapter(datas);
+
+
+        // Attach the adapter to the recyclerview to populate items
+        mRecyclerView.setAdapter(mAdapter);
+        // Set layout manager to position the items
+        mRecyclerView.setLayoutManager(mStaggeredLayoutManager);
+        Call<SearchProductResultModel> searchProductCall = mService.search(query);
+        searchProductCall.enqueue(mCallback);
+
+        mCallback = callbackSearch();
+
 
     }
 
@@ -104,75 +136,28 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    private Callback<SearchProductResultModel[]> callbackSearch(){
-        return new Callback<SearchProductResultModel[]>() {
+    private Callback<SearchProductResultModel> callbackSearch(){
+        return new Callback<SearchProductResultModel>() {
             @Override
-            public void onResponse(Call<SearchProductResultModel[]> call, Response<SearchProductResultModel[]> response) {
-/*                if (response.isSuccess()) {
-                    mOASearchResult = response.body();
-                    if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
-                        // Cursor
-                        String[] columns = new String[] { "_id", "text" };
-                        Object[] temp = new Object[] { 0, "default" };
-                        MatrixCursor cursor = new MatrixCursor(columns);
-                        List<String> results = new ArrayList<>();
-                        for(int i = 0; i < response.body().length; i++) {
-                            temp[0] = i;
-                            temp[1] = response.body()[i].getNama();
-                            cursor.addRow(temp);
-                            results.add(response.body()[i].getNama());
-                        }
-
-                        searchView.setOnSuggestionListener(new SearchView.OnSuggestionListener() {
-                            @Override
-                            public boolean onSuggestionSelect(int i) {
-
-                                return true;
-                            }
-
-                            @Override
-                            public boolean onSuggestionClick(int i) {
-                                Cursor cursor = (Cursor)     searchView.getSuggestionsAdapter().getItem(i);
-                                String feedName = cursor.getString(1);
-                                searchView.setQuery(feedName, false);
-                                searchView.clearFocus();
-
-                                for (SearchProductResultModel list : mOASearchResult) {
-                                    String nama = list.getNama();
-                                    if (nama.equals(feedName)) {
-                                        selectedIdSearch = list.getId();
-                                        selectedType = list.getType();
-                                        break;
-                                    }
-                                }
-
-                                final Intent intent;
-                                if (selectedType.equals("penyelenggara")) {
-                                    intent = new Intent(getContext(), LembagaActivity.class);
-                                    intent.putExtra("penyelenggaraId", selectedIdSearch);
-                                } else {
-                                    intent = new Intent(getContext(), PembicaraActivity.class);
-                                    intent.putExtra("pembicaraId", selectedIdSearch);
-                                }
-                                getContext().startActivity(intent);
-
-                                return true;
-                            }
-                        });
-
-                        searchAcaraAdapter = new SearchAcaraAdapter(getContext(), cursor, results);
-                        searchView.setSuggestionsAdapter(searchAcaraAdapter);
-                        if (searchAcaraAdapter !=null) {
-                            searchAcaraAdapter.notifyDataSetChanged();
-                        }
+            public void onResponse(Call<SearchProductResultModel> call, Response<SearchProductResultModel> response) {
+                if ( response.body() != null && response.body().getStatus().getError_code() == 0) {
+                    Log.d("TEST", "response.body() != null && response.body().getStatus().getError_code() == 0");
+                    // update the adapter, saving the last known size
+                    int curSize = mAdapter.getItemCount();
+                    Data[] moreProducts = response.body().getData();
+                    for (int i = 0; i < moreProducts.length; i++) {
+                        datas.add(moreProducts[i]);
                     }
 
 
-                }*/
+                    // for efficiency purposes, only notify the adapter of what elements that got changed
+                    // curSize will equal to the index of the first element inserted because the list is 0-indexed
+                    mAdapter.notifyItemRangeInserted(curSize, datas.size());
+                }
             }
 
             @Override
-            public void onFailure(Call<SearchProductResultModel[]> call, Throwable t) {
+            public void onFailure(Call<SearchProductResultModel> call, Throwable t) {
 
             }
         };
