@@ -1,5 +1,6 @@
 package com.alifanurani.topedsimplesearch;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.MatrixCursor;
@@ -37,11 +38,13 @@ public class MainActivity extends AppCompatActivity {
     private SearchView searchView;
     private RecyclerView mRecyclerView;
     private StaggeredGridLayoutManager mStaggeredLayoutManager;
+    private ProgressDialog loading = null;
 
     private Callback<SearchProductResultModel> mCallback;
     private Api mService;
     private ProductAdapter mAdapter;
     private ArrayList<Data> datas;
+    private String query;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,10 +75,13 @@ public class MainActivity extends AppCompatActivity {
         mRecyclerView.setAdapter(mAdapter);
         mRecyclerView.setLayoutManager(mStaggeredLayoutManager);
 
-
-
-
-
+        if(loading == null){
+            loading = new ProgressDialog(MainActivity.this);
+            loading.setCancelable(false);
+            loading.setMessage("Loading...");
+            loading.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+        }
+        
     }
 
     @Override
@@ -87,8 +93,9 @@ public class MainActivity extends AppCompatActivity {
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
+                loading.show();
                 searchProduct(query);
-                return true;
+                return false;
             }
 
             @Override
@@ -105,22 +112,25 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
-    private void searchProduct(String query) {
+    private void searchProduct(String q) {
 
 
         datas = new ArrayList<>();
         mAdapter = new ProductAdapter(datas);
+        query = q;
 
-
-        // Attach the adapter to the recyclerview to populate items
         mRecyclerView.setAdapter(mAdapter);
-        // Set layout manager to position the items
         mRecyclerView.setLayoutManager(mStaggeredLayoutManager);
-        Call<SearchProductResultModel> searchProductCall = mService.search(query);
+        Call<SearchProductResultModel> searchProductCall = mService.searchPagination(query,1,10);
         searchProductCall.enqueue(mCallback);
-
         mCallback = callbackSearch();
-
+        mRecyclerView.addOnScrollListener(new EndlessRecyclerViewScrollListener(mStaggeredLayoutManager) {
+            @Override
+            public void onLoadMore(int page, int totalItems) {
+                Call<SearchProductResultModel> searchProductCall12= mService.searchPagination(query,page*10+1,10);
+                searchProductCall12.enqueue(mCallback);
+            }
+        });
 
     }
 
@@ -153,12 +163,14 @@ public class MainActivity extends AppCompatActivity {
                     // for efficiency purposes, only notify the adapter of what elements that got changed
                     // curSize will equal to the index of the first element inserted because the list is 0-indexed
                     mAdapter.notifyItemRangeInserted(curSize, datas.size());
+
                 }
+                loading.dismiss();
             }
 
             @Override
             public void onFailure(Call<SearchProductResultModel> call, Throwable t) {
-
+                loading.dismiss();
             }
         };
     }

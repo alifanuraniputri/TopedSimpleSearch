@@ -12,4 +12,8 @@ public interface Api {
     @GET("search/v1/product")
     Call<SearchProductResultModel> search(
             @Query("q") String q);
+
+    @GET("search/v1/product")
+    Call<SearchProductResultModel> searchPagination(
+            @Query("q") String q,@Query("start") int start, @Query("rows") int rows);
 }
