@@ -40,8 +40,9 @@ import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity {
 
-    private SearchView searchView;
+    @BindView(R.id.toolbar) Toolbar toolbar;
     @BindView(R.id.rvProduct) RecyclerView mRecyclerView;
+    private SearchView searchView;
     private StaggeredGridLayoutManager mStaggeredLayoutManager;
     private ProgressDialog loading = null;
 
@@ -52,9 +53,6 @@ public class MainActivity extends AppCompatActivity {
     private String query;
     private int pageNow;
 
-    @BindView(R.id.toolbar) Toolbar toolbar;
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -62,8 +60,6 @@ public class MainActivity extends AppCompatActivity {
         ButterKnife.bind(this);
         setSupportActionBar(toolbar);
 
-
-        // Create global configuration and initialize ImageLoader with this config
         DisplayImageOptions defaultOptions = new DisplayImageOptions.Builder()
                 .cacheOnDisk(true)
                 .build();
@@ -88,7 +84,6 @@ public class MainActivity extends AppCompatActivity {
         }
 
         deleteDatabase("TopedSearch.db");
-
         Configuration dbConfiguration = new Configuration.Builder(this)
                 .setDatabaseName("TopedSearch.db")
                 .setDatabaseVersion(5)
@@ -100,7 +95,6 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
 
         searchView = (SearchView) MenuItemCompat.getActionView(menu.findItem(R.id.action_search));
@@ -128,12 +122,7 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public boolean onQueryTextChange(String newText) {
-
                 return true;
-            }
-
-            public void callSearch(String query) {
-                //Do searching
             }
 
         });
@@ -142,11 +131,9 @@ public class MainActivity extends AppCompatActivity {
 
     private void searchProductAPI(String q) {
 
-
         datas = new ArrayList<>();
         mAdapter = new ProductAdapter(datas);
         query = q;
-
         mRecyclerView.setAdapter(mAdapter);
         mRecyclerView.setLayoutManager(mStaggeredLayoutManager);
         Call<SearchProductResultModel> searchProductCall = mService.searchPagination(query,1,10);
@@ -164,15 +151,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void searchProductDB(String q) {
-
         datas = new ArrayList<>();
         mAdapter = new ProductAdapter(datas);
         query = q;
-
         mRecyclerView.setAdapter(mAdapter);
         mRecyclerView.setLayoutManager(mStaggeredLayoutManager);
         selectProductDB(0,query);
-
         mRecyclerView.addOnScrollListener(new EndlessRecyclerViewScrollListener(mStaggeredLayoutManager) {
             @Override
             public void onLoadMore(int page, int totalItems) {
@@ -195,17 +179,11 @@ public class MainActivity extends AppCompatActivity {
             Call<SearchProductResultModel> searchProductCall12= mService.searchPagination(query,pageNow*10+1,10);
             searchProductCall12.enqueue(mCallback);
         }
-
-
         mAdapter.notifyItemRangeInserted(curSize, datas.size());
-
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
         return super.onOptionsItemSelected(item);
     }
@@ -232,7 +210,6 @@ public class MainActivity extends AppCompatActivity {
                             item.image_uri = moreProducts[i].getImage_uri();
                             item.price = moreProducts[i].getPrice();
                             item.term = query;
-                            //item.idLocal = i;
                             item.save();
                         }
                         ActiveAndroid.setTransactionSuccessful();
@@ -241,10 +218,8 @@ public class MainActivity extends AppCompatActivity {
                     } catch (Exception e) {
 
                     }
-
                 }
                 loading.dismiss();
-
                 long size = Product.getSize(query);
                 Log.d("DATA SIZE` "+query, size+"");
 
