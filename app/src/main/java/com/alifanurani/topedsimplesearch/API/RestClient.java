@@ -1,4 +1,4 @@
-package com.alifanurani.topedsimplesearch;
+package com.alifanurani.topedsimplesearch.API;
 
 import java.util.concurrent.TimeUnit;
 

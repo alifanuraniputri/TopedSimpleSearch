@@ -1,4 +1,4 @@
-package com.alifanurani.topedsimplesearch;
+package com.alifanurani.topedsimplesearch.SearchModel;
 
 /**
  * Created by USER on 9/14/2016.

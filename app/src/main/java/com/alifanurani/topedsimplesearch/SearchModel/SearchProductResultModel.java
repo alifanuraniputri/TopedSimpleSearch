@@ -1,4 +1,4 @@
-package com.alifanurani.topedsimplesearch;
+package com.alifanurani.topedsimplesearch.SearchModel;
 
 import java.util.Arrays;
 

@@ -1,4 +1,6 @@
-package com.alifanurani.topedsimplesearch;
+package com.alifanurani.topedsimplesearch.API;
+
+import com.alifanurani.topedsimplesearch.SearchModel.SearchProductResultModel;
 
 import retrofit2.Call;
 import retrofit2.http.GET;

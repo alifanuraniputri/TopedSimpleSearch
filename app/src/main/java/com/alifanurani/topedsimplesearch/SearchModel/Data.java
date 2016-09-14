@@ -1,4 +1,4 @@
-package com.alifanurani.topedsimplesearch;
+package com.alifanurani.topedsimplesearch.SearchModel;
 
 /**
  * Created by USER on 9/14/2016.
@@ -12,6 +12,12 @@ public class Data {
     private String image_uri;
 
     private String price;
+
+    public Data(String name, String image_uri, String price) {
+        this.name = name;
+        this.image_uri = image_uri;
+        this.price = price;
+    }
 
     public long getId() {
         return id;
